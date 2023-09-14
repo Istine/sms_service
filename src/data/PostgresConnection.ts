@@ -24,16 +24,26 @@ export class PostgresConnection implements DatabaseContext {
   }
 
   async initializeServices(): Promise<any> {
+    //defininf database models
     const PhoneNumberModel = new PhoneNumber(this._sequelize).define();
     const AccountModel = new Account(this._sequelize).define();
+
+    //creating associations
     AccountModel.hasMany(PhoneNumberModel, {
       foreignKey: "account_id",
       onDelete: "NO ACTION",
       onUpdate: "NO ACTION",
     });
+
+    //updating db schema if necessary
     await this._sequelize.sync({ alter: true });
+
     const RedisService = new Redis();
+
+    //connecting to redis
     await RedisService.connect();
+
+    //instance of Sms class with dependencies injected
     return new Sms(AccountModel, PhoneNumberModel, RedisService);
   }
 }

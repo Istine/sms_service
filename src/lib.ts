@@ -1,4 +1,4 @@
-import { CommonAuthFucntions } from "./AuthAPI/CommonAuthFunctions";
+import { CommonAuthFucntions } from "./ValidationAPI/CommonAuthFunctions";
 import { FIELDS } from "./types";
 
 export const errorResponse = (errorMessage: string) => ({

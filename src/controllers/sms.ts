@@ -1,20 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { errorResponse, successResponse } from "../lib";
-import { FIELDS, TEXT } from "../types";
-import { Account } from "../models/account";
-import { PhoneNumber } from "../models/phoneNumber";
+import { AccountModel, FIELDS, PhoneModel, TEXT } from "../types";
 import { Redis } from "../services/redis";
 
 export class Sms {
-  private _phoneNumber!: ReturnType<typeof PhoneNumber.prototype.define>;
-  private _account!: ReturnType<typeof Account.prototype.define>;
+  private _phoneNumber!: PhoneModel;
+  private _account!: AccountModel;
   private _redis!: Redis;
 
-  constructor(
-    account: ReturnType<typeof Account.prototype.define>,
-    phoneNumber: ReturnType<typeof PhoneNumber.prototype.define>,
-    redis: Redis
-  ) {
+  constructor(account: AccountModel, phoneNumber: PhoneModel, redis: Redis) {
     this._phoneNumber = phoneNumber;
     this._account = account;
     this._redis = redis;
@@ -102,7 +96,7 @@ export class Sms {
     }
 
     if (currentCount === 0) {
-      this._redis.upSert(from, to);
+      this._redis.upSert(from, 1);
     } else {
       this._redis.increment(from);
     }

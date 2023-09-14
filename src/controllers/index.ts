@@ -2,8 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { PostgresConnection } from "../data/PostgresConnection";
 import { Sms } from "./sms";
 import { Auth } from "./auth";
-
-type ExpressApp = ReturnType<typeof express>;
+import { ExpressApp } from "../types";
 
 export class App {
   static run() {
