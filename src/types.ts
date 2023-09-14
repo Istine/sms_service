@@ -1,0 +1,15 @@
+export interface DatabaseContext {
+  connect(): any;
+}
+export enum FIELDS {
+  FROM = "from",
+  T0 = "to",
+  TEXT = "text",
+}
+
+export enum TEXT {
+  STOP = "STOP",
+  STOPN = "STOP\n",
+  STOPR = "STOP\r",
+  STOPRN = "STOP\r\n",
+}
