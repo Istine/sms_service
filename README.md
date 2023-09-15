@@ -1,6 +1,6 @@
 # Node TypeScript Express Project with Redis, PostgreSQL, and Docker Compose
 
-This is a Node.js project template using TypeScript and Express.js that includes Docker Compose configuration for running Redis and PostgreSQL containers. It's designed to help you quickly set up a modern backend application with database and caching support.
+This is a Node.js project using TypeScript and Express.js that includes Docker Compose configuration for running Redis and PostgreSQL containers. It is an API that exposes endpoints for sending an recieving text messagesm while ensuring rate limiting features and authentication.
 
 ## Prerequisites
 
@@ -104,7 +104,7 @@ Run this command in the folder where the Dump file is located (use bash or power
 
 ### Redis commands
 
-- docker exec -it sms_redis sh
+- docker exec -it redis-container-name sh
 - redis_cli
 
 ### Postgres commands
