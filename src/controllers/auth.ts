@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { validateField, errorResponse } from "../lib";
 import { FIELDS } from "../types";
 
-export class Auth {
-  static validateCredentials(req: Request, res: Response, next: NextFunction) {
+export const Auth = {
+  validateCredentials(req: Request, res: Response, next: NextFunction) {
     try {
       const header = req.headers.authorization?.split(" ")[1];
       if (!header) {
@@ -19,9 +19,9 @@ export class Auth {
     } catch (error) {
       next(new Error("Problem authenticating account"));
     }
-  }
+  },
 
-  static validateInput(req: Request, res: Response, next: NextFunction) {
+  validateInput(req: Request, res: Response, next: NextFunction) {
     try {
       const { from = "", to = "", text = "" } = req.body;
       const fromFieldOrError = validateField(from, FIELDS.FROM);
@@ -38,5 +38,5 @@ export class Auth {
     } catch (error) {
       next(error);
     }
-  }
-}
+  },
+};

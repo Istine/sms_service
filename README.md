@@ -28,9 +28,9 @@ Before you begin, ensure you have the following software installed on your machi
 3. Create a `.env` file in the project root and configure your environment variables. Here's an example `.env` file:
 
    ```env
-   PORT=3000
-   DATABASE_URL=postgres://username:password@localhost:5432/mydatabase
-   REDIS_URL=redis://localhost:6379
+   PORT=4000
+   DATABASE_URL=postgres://username:password@(localhost or container-service-name):5432/mydatabase
+   REDIS_URL=redis://(localhost or container-service-name):6379
    ```
 
    Update the values with your desired configuration.

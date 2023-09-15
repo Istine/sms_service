@@ -1,42 +1,47 @@
 import { Request, Response, NextFunction } from "express";
 import { errorResponse, successResponse } from "../lib";
-import { AccountModel, FIELDS, PhoneModel, TEXT } from "../types";
-import { Redis } from "../services/redis";
+import { FIELDS, TEXT } from "../types";
+import express from "express";
+import db from "../models";
+import {
+  createRedisClient,
+  getKey,
+  incrementKey,
+  keyExists,
+  setKey,
+  upsertKey,
+} from "../services/redis";
+import { configOptions } from "../config";
+import { Auth } from "./auth";
 
-export class Sms {
-  private _phoneNumber!: PhoneModel;
-  private _account!: AccountModel;
-  private _redis!: Redis;
+const Account = db.Account;
+const PhoneNumber = db.PhoneNumber;
 
-  constructor(account: AccountModel, phoneNumber: PhoneModel, redis: Redis) {
-    this._phoneNumber = phoneNumber;
-    this._account = account;
-    this._redis = redis;
-  }
+const router = express.Router();
 
-  async inboundSms(req: Request, res: Response, next: NextFunction) {
+const redis = createRedisClient(configOptions.redisUrl);
+
+router.post(
+  "/inbound/sms",
+  Auth.validateCredentials,
+  Auth.validateInput,
+  async (req: Request, res: Response, next: NextFunction) => {
     const { from, to, text } = req.body;
-    const accountExists = await this._account.findOne({
+
+    const accountExists = await Account.findOne({
       //@ts-ignore
       where: { username: req.username, auth_id: req.password },
     });
+
     if (!accountExists) {
       return res.sendStatus(403);
     }
 
-    await this.handleTextInput(text, from, to);
+    await handleTextInput(text, from, to);
 
-    const isToParamaterInDatabase = await this._phoneNumber.findOne({
-      where: { number: to },
-      include: [
-        {
-          model: this._account,
-          where: {
-            //@ts-ignore
-            id: accountExists.id,
-          },
-        },
-      ],
+    const isToParamaterInDatabase = await PhoneNumber.findOne({
+      //@ts-ignore
+      where: { number: to, account_id: accountExists.id },
     });
 
     if (!isToParamaterInDatabase) {
@@ -47,10 +52,15 @@ export class Sms {
 
     return res.status(200).json(successResponse("inbound sms ok"));
   }
+);
 
-  async outboundSms(req: Request, res: Response, next: NextFunction) {
+router.post(
+  "/outbound/sms",
+  Auth.validateCredentials,
+  Auth.validateInput,
+  async (req: Request, res: Response, next: NextFunction) => {
     const { from, to, text } = req.body;
-    const accountExists = await this._account.findOne({
+    const accountExists = await Account.findOne({
       //@ts-ignore
       where: { username: req.username, auth_id: req.password },
     });
@@ -58,7 +68,7 @@ export class Sms {
       return res.sendStatus(403);
     }
 
-    const recordExists = await this.checkCacheStorage(from, to);
+    const recordExists = await checkCacheStorage(from, to);
 
     if (recordExists) {
       return res
@@ -68,7 +78,7 @@ export class Sms {
         );
     }
 
-    const currentCount = await this.getRequestCount(from);
+    const currentCount = await getRequestCount(from);
 
     if (currentCount >= 50) {
       return res
@@ -76,17 +86,9 @@ export class Sms {
         .json(errorResponse(`limit reached for from ${from}`));
     }
 
-    const isFromParamaterInDatabase = await this._phoneNumber.findOne({
-      where: { number: from },
-      include: [
-        {
-          model: this._account,
-          where: {
-            //@ts-ignore
-            id: accountExists.id,
-          },
-        },
-      ],
+    const isFromParamaterInDatabase = await PhoneNumber.findOne({
+      //@ts-ignore
+      where: { number: from, account_id: accountExists.id },
     });
 
     if (!isFromParamaterInDatabase) {
@@ -96,37 +98,39 @@ export class Sms {
     }
 
     if (currentCount === 0) {
-      this._redis.upSert(from, 1);
+      await upsertKey(redis, from, 1);
     } else {
-      this._redis.increment(from);
+      await incrementKey(redis, from);
     }
 
     return res.status(200).json(successResponse("outbound sms ok"));
   }
+);
 
-  private async getRequestCount(from: string): Promise<number> {
-    return this._redis.get(from);
-  }
+const getRequestCount = async (from: string): Promise<number> => {
+  return await getKey(redis, from);
+};
 
-  private async handleTextInput(
-    text: string,
-    from: string,
-    to: string
-  ): Promise<void> {
-    if (
-      text === TEXT.STOP ||
-      text === TEXT.STOPN ||
-      text === TEXT.STOPR ||
-      text === TEXT.STOPRN
-    ) {
-      await this._redis.set(from, to);
-    }
+const handleTextInput = async (
+  text: string,
+  from: string,
+  to: string
+): Promise<void> => {
+  if (
+    text === TEXT.STOP ||
+    text === TEXT.STOPN ||
+    text === TEXT.STOPR ||
+    text === TEXT.STOPRN
+  ) {
+    await setKey(redis, from, to);
   }
+};
 
-  private async checkCacheStorage(
-    key: string,
-    value: string
-  ): Promise<boolean> {
-    return await this._redis.exists(key, value);
-  }
-}
+const checkCacheStorage = async (
+  key: string,
+  value: string
+): Promise<boolean> => {
+  return await keyExists(redis, key, value);
+};
+
+export default router;
