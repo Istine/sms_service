@@ -84,7 +84,7 @@ Make sure to update your `.env` file with the appropriate database and Redis URL
   - models/            # Data models and database schema
   - services/            # API routes
   - index.ts             # Express application setup
-- test/                # Test files
+- __tests__/                # Test files
 - .dockerignore         # Ignore files when building Docker images
 - .env           # Sample environment variables
 - docker-compose.yml    # Docker Compose configuration

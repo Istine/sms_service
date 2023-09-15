@@ -5,15 +5,19 @@ import { Auth } from "./auth";
 import { ExpressApp } from "../types";
 
 export class App {
-  static run() {
+  static async run(connection: PostgresConnection) {
     const app = express();
-    App.setup(app);
+    await App.setup(app, connection);
+    return app;
   }
 
-  private static async setup(app: ExpressApp) {
+  private static async setup(
+    app: ExpressApp,
+    pgConnection: PostgresConnection
+  ) {
     const PORT = process.env.PORT || 4000;
     app.use(express.json());
-    const pgConnection = new PostgresConnection();
+
     const SMS_CONTROLLERS: Sms = await pgConnection.initializeServices();
 
     app.post(
