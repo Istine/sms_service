@@ -15,7 +15,7 @@ Before you begin, ensure you have the following software installed on your machi
 1. Clone this repository to your local machine:
 
    ```bash
-   git clone https://github.com/yourusername/your-node-express-project.git
+   git clone https://github.com/Istine/sms_service.git
    cd your-project-folder
    ```
 
@@ -79,13 +79,13 @@ Make sure to update your `.env` file with the appropriate database and Redis URL
 ```
 - src/
   - controllers/       # Express route controllers
-  - middleware/        # Custom middleware functions
-  - data/        # Custom middleware functions
   - models/            # Data models and database schema
   - services/            # API routes
   - index.ts             # Express application setup
-- __tests__/                # Test files
 - .dockerignore         # Ignore files when building Docker images
+- config.ts         # helper functions
+- lib.ts         # helper functions
+- types.ts         # types files
 - .env           # Sample environment variables
 - docker-compose.yml    # Docker Compose configuration
 - Dockerfile            # Docker image configuration

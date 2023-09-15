@@ -19,7 +19,11 @@ const PhoneNumber = db.PhoneNumber;
 
 const router = express.Router();
 
-const redis = createRedisClient(configOptions.redisUrl);
+const redisOptions = {
+  url: configOptions.redisUrl,
+};
+
+const redis = createRedisClient(redisOptions);
 
 router.post(
   "/inbound/sms",
@@ -78,7 +82,7 @@ router.post(
         );
     }
 
-    const currentCount = await getRequestCount(from);
+    const currentCount = await getRequestCount(btoa(from));
 
     if (currentCount >= 50) {
       return res
@@ -98,9 +102,9 @@ router.post(
     }
 
     if (currentCount === 0) {
-      await upsertKey(redis, from, 1);
+      await upsertKey(redis, btoa(from), 1);
     } else {
-      await incrementKey(redis, from);
+      await incrementKey(redis, btoa(from));
     }
 
     return res.status(200).json(successResponse("outbound sms ok"));
@@ -108,7 +112,8 @@ router.post(
 );
 
 const getRequestCount = async (from: string): Promise<number> => {
-  return await getKey(redis, from);
+  const val = await getKey(redis, from);
+  return JSON.parse(val);
 };
 
 const handleTextInput = async (
