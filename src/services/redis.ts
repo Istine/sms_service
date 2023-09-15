@@ -5,7 +5,9 @@ export class Redis {
   private redisClient!: RedisType;
 
   constructor() {
-    this.redisClient = createClient();
+    this.redisClient = createClient({
+      url: "redis://sms_redis:6379",
+    });
   }
 
   async connect() {
@@ -35,12 +37,12 @@ export class Redis {
   }
 
   async increment(key: string) {
-    await this.redisClient.INCRBY(key, 1);
+    await this.redisClient.INCRBY(key, 1); //does not affect TTL
   }
 
   async upSert(key: string, value: any) {
     await this.redisClient.set(key, JSON.stringify(value), {
-      EX: 60 * 60 * 24,
+      EX: 60 * 60 * 24, // only for 24 hours
     });
   }
 }

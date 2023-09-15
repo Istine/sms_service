@@ -1,5 +1,21 @@
-import { CommonAuthFucntions } from "./ValidationAPI/CommonAuthFunctions";
 import { FIELDS } from "./types";
+
+export const CommonAuthFucntions = {
+  requiredField(fieldValue: string): boolean {
+    if (!fieldValue) {
+      return false;
+    }
+
+    return true;
+  },
+
+  stringLengthvalid(fieldValue: string, min: number, max: number): boolean {
+    if (fieldValue.length >= min && fieldValue.length <= max) {
+      return true;
+    }
+    return false;
+  },
+};
 
 export const errorResponse = (errorMessage: string) => ({
   message: "",
@@ -15,20 +31,22 @@ export const validateField = (value: string, fieldName: string): string => {
       fieldValue = !CommonAuthFucntions.requiredField(value)
         ? `${fieldName} is missing`
         : fieldValue;
+      fieldValue =
+        fieldValue === "" &&
+        !CommonAuthFucntions.stringLengthvalid(value, 6, 16)
+          ? `${fieldName} is invalid`
+          : fieldValue;
+      break;
+
+    case FIELDS.T0:
       fieldValue = !CommonAuthFucntions.stringLengthvalid(value, 6, 16)
         ? `${fieldName} is invalid`
         : fieldValue;
       break;
 
-    case FIELDS.T0:
-      fieldValue = !CommonAuthFucntions.stringLengthvalid(value, 6, 16)
-        ? `${fieldName} is missing`
-        : fieldName;
-      break;
-
     case FIELDS.TEXT:
       fieldValue = !CommonAuthFucntions.stringLengthvalid(value, 6, 120)
-        ? `${fieldName} is missing`
+        ? `${fieldName} is invalid`
         : fieldValue;
       break;
 

@@ -10,7 +10,7 @@ export class PostgresConnection implements DatabaseContext {
 
   constructor() {
     this._sequelize = new Sequelize(
-      "postgres://my_user:password@db:5432/sms_db"
+      "postgres://postgres:postgres@db:5432/sms_db"
     );
   }
 
