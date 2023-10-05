@@ -2,22 +2,21 @@ import { Request, Response, NextFunction } from "express";
 import { RATE_LIMIT, errorResponse, successResponse } from "../lib";
 import { FIELDS, extendedRequestObject } from "../types";
 import express from "express";
-import db from "../models";
-import { Auth } from "../middleware/auth";
 import { findrByIdAndPhoneNumber } from "../services/smsService";
 import {
   TextStopHandler,
   checkCacheStorage,
   rateLimit,
 } from "../services/redis";
+import validateInput, { validateCredentials } from "../middleware/validation";
 import { asyncErrorWrapper } from "../middleware/error";
 
 const router = express.Router();
 
 router.post(
   "/inbound/sms",
-  Auth.validateCredentials,
-  Auth.validateInput,
+  validateCredentials,
+  validateInput,
   asyncErrorWrapper(async (req: Request, res: Response, next: NextFunction) => {
     const { from, to, text } = req.body;
 
@@ -40,8 +39,8 @@ router.post(
 
 router.post(
   "/outbound/sms",
-  Auth.validateCredentials,
-  Auth.validateInput,
+  validateCredentials,
+  validateInput,
   asyncErrorWrapper(async (req: Request, res: Response, next: NextFunction) => {
     const { from, to, text } = req.body;
 
