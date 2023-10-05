@@ -39,15 +39,25 @@ export const validateField = (value: string, fieldName: string): string => {
       break;
 
     case FIELDS.T0:
-      fieldValue = !CommonAuthFucntions.stringLengthvalid(value, 6, 16)
-        ? `${fieldName} is invalid`
+      fieldValue = !CommonAuthFucntions.requiredField(value)
+        ? `${fieldName} is missing`
         : fieldValue;
+      fieldValue =
+        fieldValue === "" &&
+        !CommonAuthFucntions.stringLengthvalid(value, 6, 16)
+          ? `${fieldName} is invalid`
+          : fieldValue;
       break;
 
     case FIELDS.TEXT:
-      fieldValue = !CommonAuthFucntions.stringLengthvalid(value, 6, 120)
-        ? `${fieldName} is invalid`
+      fieldValue = !CommonAuthFucntions.requiredField(value)
+        ? `${fieldName} is missing`
         : fieldValue;
+      fieldValue =
+        fieldValue === "" &&
+        !CommonAuthFucntions.stringLengthvalid(value, 1, 120)
+          ? `${fieldName} is invalid`
+          : fieldValue;
       break;
 
     default:

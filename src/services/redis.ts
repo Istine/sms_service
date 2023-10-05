@@ -1,82 +1,35 @@
-import { createClient } from "redis";
-import { RedisType } from "../types";
+import { getKey, keyExists, setKey } from "../repository/redisRepository";
+import { TEXT } from "../types";
 
-export function createRedisClient(options?: any): RedisType {
-  return createClient(options);
-}
+export const getRequestCount = async (from: string): Promise<number> => {
+  const val = await getKey(from);
+  return JSON.parse(val);
+};
 
-export async function connectToRedis(redisClient: RedisType): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    redisClient.on("error", (error) => {
-      reject(new Error(`Redis Error: ${error}`));
-    });
+export const TextStopHandler = async (
+  text: string,
+  from: string,
+  to: string
+): Promise<void> => {
+  if (
+    text === TEXT.STOP ||
+    text === TEXT.STOPN ||
+    text === TEXT.STOPR ||
+    text === TEXT.STOPRN
+  ) {
+    try {
+      await setKey(from, to);
+    } catch (error) {
+      //add logger here
+      console.log(error);
+      throw error;
+    }
+  }
+};
 
-    redisClient.on("connect", () => {
-      console.log("Redis has connected");
-      resolve();
-    });
-  });
-}
-
-export async function setKey(
-  redisClient: RedisType,
-  key: string,
-  value: any
-): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    await redisClient.connect();
-    redisClient.set(key, JSON.stringify(value), { EX: 60 * 60 * 4 });
-    await redisClient.disconnect();
-    resolve();
-  });
-}
-
-export async function keyExists(
-  redisClient: RedisType,
+export const checkCacheStorage = async (
   key: string,
   value: string
-): Promise<boolean> {
-  return new Promise(async (resolve, reject) => {
-    await redisClient.connect();
-    const exists = await redisClient.get(key);
-    await redisClient.disconnect();
-    resolve(JSON.parse(exists as string) === value);
-  });
-}
-
-export async function getKey(
-  redisClient: RedisType,
-  key: string
-): Promise<any> {
-  return new Promise(async (resolve, reject) => {
-    await redisClient.connect();
-    const val = await redisClient.get(key);
-    await redisClient.disconnect();
-    resolve(val);
-  });
-}
-
-export async function incrementKey(
-  redisClient: RedisType,
-  key: string
-): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    await redisClient.connect();
-    await redisClient.INCRBY(key, 1);
-    await redisClient.disconnect();
-    resolve();
-  });
-}
-
-export async function upsertKey(
-  redisClient: RedisType,
-  key: string,
-  value: any
-): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    await redisClient.connect();
-    await redisClient.set(key, JSON.stringify(value), { EX: 60 * 60 * 24 });
-    await redisClient.disconnect();
-    resolve();
-  });
-}
+): Promise<boolean> => {
+  return await keyExists(key, value);
+};

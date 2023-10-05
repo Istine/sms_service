@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { validateField, errorResponse } from "../lib";
-import { FIELDS } from "../types";
+import { FIELDS, extendedRequestObject } from "../types";
+import { authenticateAccount } from "../services/smsService";
 
 export const Auth = {
-  validateCredentials(req: Request, res: Response, next: NextFunction) {
+  async validateCredentials(req: Request, res: Response, next: NextFunction) {
     try {
       const header = req.headers.authorization?.split(" ")[1];
       if (!header) {
@@ -11,12 +12,21 @@ export const Auth = {
       }
       const decoded = atob(header as string);
       const [username, password] = decoded.split(":");
-      //@ts-ignore
-      req.username = username;
-      //@ts-ignore
-      req.password = password;
+
+      const accountExists: { id: number } = await authenticateAccount({
+        username,
+        password,
+      });
+
+      if (!accountExists) {
+        return res.sendStatus(403);
+      }
+
+      (req as extendedRequestObject).account_id = accountExists.id;
+
       next();
     } catch (error) {
+      console.log(error);
       next(new Error("Problem authenticating account"));
     }
   },
