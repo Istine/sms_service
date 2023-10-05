@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { errorResponse, successResponse } from "../lib";
+import { RATE_LIMIT, errorResponse, successResponse } from "../lib";
 import { FIELDS, extendedRequestObject } from "../types";
 import express from "express";
 import db from "../models";
@@ -8,7 +8,7 @@ import { findrByIdAndPhoneNumber } from "../services/smsService";
 import {
   TextStopHandler,
   checkCacheStorage,
-  getRequestCount,
+  rateLimit,
 } from "../services/redis";
 import { asyncErrorWrapper } from "../middleware/error";
 
@@ -47,28 +47,10 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     const { from, to, text } = req.body;
 
-    const recordExists = await checkCacheStorage(from, to);
-
-    if (recordExists) {
-      return res
-        .status(401)
-        .json(
-          errorResponse(`sms from ${from} to ${to}  blocked by STOP request`)
-        );
-    }
-
-    const currentCount = await getRequestCount(btoa(from));
-
-    if (currentCount >= 50) {
-      return res
-        .status(401)
-        .json(errorResponse(`limit reached for from ${from}`));
-    }
-
-    const isFromParamaterInDatabase = await PhoneNumber.findOne({
-      //@ts-ignore
-      where: { number: from, account_id: accountExists.id },
-    });
+    const isFromParamaterInDatabase = await findrByIdAndPhoneNumber(
+      (req as extendedRequestObject).account_id,
+      from
+    );
 
     if (!isFromParamaterInDatabase) {
       return res
@@ -76,11 +58,23 @@ router.post(
         .json(errorResponse(`${FIELDS.FROM} parameter not found`));
     }
 
-    // if (currentCount === 0) {
-    //   await upsertKey(redis, btoa(from), 1);
-    // } else {
-    //   await incrementKey(redis, btoa(from));
-    // }
+    const recordExistsInCache = await checkCacheStorage(from, to, text);
+
+    if (recordExistsInCache) {
+      return res
+        .status(401)
+        .json(
+          errorResponse(`sms from ${from} to ${to}  blocked by STOP request`)
+        );
+    }
+
+    const currentCount = await rateLimit({ ip: req.ip }, from);
+
+    if (currentCount > RATE_LIMIT) {
+      return res
+        .status(401)
+        .json(errorResponse(`limit reached for from ${from}`));
+    }
 
     return res.status(200).json(successResponse("outbound sms ok"));
   }

@@ -1,9 +1,23 @@
-import { getKey, keyExists, setKey } from "../repository/redisRepository";
+import { RATE_LIMIT, RATE_LIMIT_WINDOW_MS } from "../lib";
+import {
+  keyExists,
+  rateLimitRedis,
+  setKey,
+} from "../repository/redisRepository";
 import { TEXT } from "../types";
 
-export const getRequestCount = async (from: string): Promise<number> => {
-  const val = await getKey(from);
-  return JSON.parse(val);
+export const rateLimit = async (
+  redisConfig: { ip: string },
+  from: string
+): Promise<number> => {
+  try {
+    const ipAddress = redisConfig.ip; // Use the IP address of the requester as a unique identifier
+    const key = `rateLimit:${ipAddress}:${from}`;
+    const val = await rateLimitRedis(key, RATE_LIMIT, RATE_LIMIT_WINDOW_MS);
+    return val;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const TextStopHandler = async (
@@ -29,7 +43,17 @@ export const TextStopHandler = async (
 
 export const checkCacheStorage = async (
   key: string,
-  value: string
+  value: string,
+  text: string
 ): Promise<boolean> => {
-  return await keyExists(key, value);
+  if (
+    text === TEXT.STOP ||
+    text === TEXT.STOPN ||
+    text === TEXT.STOPR ||
+    text === TEXT.STOPRN
+  ) {
+    return await keyExists(key, value);
+  }
+
+  return false;
 };

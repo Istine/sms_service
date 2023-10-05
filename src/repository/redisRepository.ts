@@ -28,25 +28,29 @@ export async function setKey(
 export async function keyExists(key: string, value: string): Promise<boolean> {
   return performRedisOperation<boolean>(async (redisClient) => {
     const exists = await redisClient.get(key);
-    return JSON.parse(exists as string) === value;
+    return exists === value;
   });
 }
 
-export async function getKey(key: string): Promise<any> {
-  return performRedisOperation<any>(async (redisClient) => {
-    const val = await redisClient.get(key);
-    return val;
+export const rateLimitRedis = async (
+  key: string,
+  limit: number,
+  windowMs: number
+) => {
+  return performRedisOperation<number>(async (redisClient) => {
+    return new Promise(async (resolve, reject) => {
+      await redisClient
+        .multi()
+        .incr(key)
+        .expire(key, windowMs / 1000)
+        .exec((err: Error, replies: Array<any>) => {
+          if (err) {
+            console.error(err);
+            reject(err);
+          }
+          const count = replies[0][1];
+          resolve(count);
+        });
+    });
   });
-}
-
-export async function incrementKey(key: string): Promise<void> {
-  return performRedisOperation<void>(async (redisClient) => {
-    await redisClient.INCRBY(key, 1);
-  });
-}
-
-export async function upsertKey(key: string, value: any): Promise<void> {
-  return performRedisOperation<void>(async (redisClient) => {
-    await redisClient.set(key, JSON.stringify(value), { EX: 60 * 60 * 24 });
-  });
-}
+};

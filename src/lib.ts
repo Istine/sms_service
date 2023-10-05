@@ -1,7 +1,10 @@
 import { FIELDS } from "./types";
 
+export const RATE_LIMIT = 50;
+export const RATE_LIMIT_WINDOW_MS = 8.64e7;
+
 export const CommonAuthFucntions = {
-  requiredField(fieldValue: string): boolean {
+  requiredField(fieldValue: string | undefined): boolean {
     if (!fieldValue) {
       return false;
     }
