@@ -2,11 +2,12 @@ import express, { NextFunction, Request, Response } from "express";
 import { config } from "dotenv";
 import routes from "./controllers/sms";
 import db from "./models";
+import { configOptions } from "./config";
 
 const bootStrap = () => {
   config();
   const app = express();
-  const PORT = process.env.PORT || 4000;
+  const PORT = configOptions.port;
   app.use(express.json());
 
   app.use(express.urlencoded({ extended: true }));
