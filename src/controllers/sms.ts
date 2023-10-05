@@ -3,7 +3,7 @@ import { RATE_LIMIT, errorResponse, successResponse } from "../lib";
 import { FIELDS, extendedRequestObject } from "../types";
 import express from "express";
 import db from "../models";
-import { Auth } from "./auth";
+import { Auth } from "../middleware/auth";
 import { findrByIdAndPhoneNumber } from "../services/smsService";
 import {
   TextStopHandler,
@@ -11,8 +11,6 @@ import {
   rateLimit,
 } from "../services/redis";
 import { asyncErrorWrapper } from "../middleware/error";
-
-const PhoneNumber = db.PhoneNumber;
 
 const router = express.Router();
 
