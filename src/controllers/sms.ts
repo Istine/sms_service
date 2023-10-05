@@ -42,7 +42,7 @@ router.post(
   "/outbound/sms",
   Auth.validateCredentials,
   Auth.validateInput,
-  async (req: Request, res: Response, next: NextFunction) => {
+  asyncErrorWrapper(async (req: Request, res: Response, next: NextFunction) => {
     const { from, to, text } = req.body;
 
     const isFromParamaterInDatabase = await findrByIdAndPhoneNumber(
@@ -75,6 +75,6 @@ router.post(
     }
 
     return res.status(200).json(successResponse("outbound sms ok"));
-  }
+  })
 );
 export default router;

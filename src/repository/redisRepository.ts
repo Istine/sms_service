@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { configOptions } from "../config";
+import { STOP_TEXT_EXP } from "../lib";
 
 const redisPool = new Redis(configOptions.redisUrl as string);
 
@@ -18,7 +19,7 @@ async function performRedisOperation<T>(
 export async function setKey(
   key: string,
   value: string,
-  expiration: number = 60 * 60 * 4
+  expiration: number = STOP_TEXT_EXP
 ): Promise<void> {
   return performRedisOperation<void>(async (redisClient) => {
     await redisClient.set(key, value, "EX", expiration);

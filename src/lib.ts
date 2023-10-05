@@ -2,6 +2,7 @@ import { FIELDS } from "./types";
 
 export const RATE_LIMIT = 50;
 export const RATE_LIMIT_WINDOW_MS = 8.64e7;
+export const STOP_TEXT_EXP = 60 * 60 * 4;
 
 export const CommonAuthFucntions = {
   requiredField(fieldValue: string | undefined): boolean {
